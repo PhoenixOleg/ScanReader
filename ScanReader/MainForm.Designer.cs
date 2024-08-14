@@ -51,6 +51,9 @@
             label6 = new Label();
             statusStrip1 = new StatusStrip();
             toolStripProgressBar1 = new ToolStripProgressBar();
+            cboCreateTextFiles = new ComboBox();
+            label7 = new Label();
+            chkCaseinsensitive = new CheckBox();
             mnuFinded.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
@@ -60,9 +63,9 @@
             label1.AutoSize = true;
             label1.Location = new Point(16, 5);
             label1.Name = "label1";
-            label1.Size = new Size(147, 15);
+            label1.Size = new Size(131, 15);
             label1.TabIndex = 0;
-            label1.Text = "Каталог со скриншотами";
+            label1.Text = "Folder with screenshots";
             // 
             // label2
             // 
@@ -71,51 +74,51 @@
             label2.Name = "label2";
             label2.Size = new Size(187, 15);
             label2.TabIndex = 1;
-            label2.Text = "Каталог со словарями (TessData)";
+            label2.Text = "Folder with dictionaries (TessData)";
             // 
             // txtDest
             // 
             txtDest.Location = new Point(16, 23);
             txtDest.Name = "txtDest";
-            txtDest.Size = new Size(671, 23);
+            txtDest.Size = new Size(943, 23);
             txtDest.TabIndex = 2;
             // 
             // txtTessData
             // 
             txtTessData.Location = new Point(16, 78);
             txtTessData.Name = "txtTessData";
-            txtTessData.Size = new Size(671, 23);
+            txtTessData.Size = new Size(942, 23);
             txtTessData.TabIndex = 3;
             // 
             // cmdDest
             // 
-            cmdDest.Location = new Point(694, 23);
+            cmdDest.Location = new Point(965, 22);
             cmdDest.Name = "cmdDest";
             cmdDest.Size = new Size(75, 23);
             cmdDest.TabIndex = 4;
-            cmdDest.Text = "Выбрать";
+            cmdDest.Text = "Select";
             cmdDest.UseVisualStyleBackColor = true;
-            cmdDest.Click += cmdDest_Click;
+            cmdDest.Click += CmdDest_Click;
             // 
             // cmdTessData
             // 
-            cmdTessData.Location = new Point(693, 78);
+            cmdTessData.Location = new Point(964, 77);
             cmdTessData.Name = "cmdTessData";
             cmdTessData.Size = new Size(75, 23);
             cmdTessData.TabIndex = 5;
-            cmdTessData.Text = "Выбрать";
+            cmdTessData.Text = "Select";
             cmdTessData.UseVisualStyleBackColor = true;
-            cmdTessData.Click += cmdTessData_Click;
+            cmdTessData.Click += CmdTessData_Click;
             // 
             // cmdStart
             // 
-            cmdStart.Location = new Point(317, 167);
+            cmdStart.Location = new Point(467, 169);
             cmdStart.Name = "cmdStart";
             cmdStart.Size = new Size(127, 38);
             cmdStart.TabIndex = 6;
             cmdStart.Text = "Start";
             cmdStart.UseVisualStyleBackColor = true;
-            cmdStart.Click += cmdStart_Click;
+            cmdStart.Click += CmdStart_Click;
             // 
             // lstAllFiles
             // 
@@ -123,7 +126,7 @@
             lstAllFiles.ItemHeight = 15;
             lstAllFiles.Location = new Point(16, 238);
             lstAllFiles.Name = "lstAllFiles";
-            lstAllFiles.Size = new Size(361, 274);
+            lstAllFiles.Size = new Size(500, 274);
             lstAllFiles.TabIndex = 7;
             // 
             // lstFindedFiles
@@ -131,9 +134,9 @@
             lstFindedFiles.ContextMenuStrip = mnuFinded;
             lstFindedFiles.FormattingEnabled = true;
             lstFindedFiles.ItemHeight = 15;
-            lstFindedFiles.Location = new Point(391, 238);
+            lstFindedFiles.Location = new Point(540, 238);
             lstFindedFiles.Name = "lstFindedFiles";
-            lstFindedFiles.Size = new Size(377, 274);
+            lstFindedFiles.Size = new Size(500, 274);
             lstFindedFiles.TabIndex = 8;
             // 
             // mnuFinded
@@ -148,27 +151,27 @@
             mnuCopy.Name = "mnuCopy";
             mnuCopy.Size = new Size(241, 22);
             mnuCopy.Text = "Скопировать файлы в каталог";
-            mnuCopy.Click += mnuCopy_Click;
+            mnuCopy.Click += MnuCopy_Click;
             // 
             // mnuMove
             // 
             mnuMove.Name = "mnuMove";
             mnuMove.Size = new Size(241, 22);
             mnuMove.Text = "Переместить файлы в каталог";
-            mnuMove.Click += mnuMove_Click;
+            mnuMove.Click += MnuMove_Click;
             // 
             // label3
             // 
             label3.AutoSize = true;
             label3.Location = new Point(16, 121);
             label3.Name = "label3";
-            label3.Size = new Size(101, 15);
+            label3.Size = new Size(64, 15);
             label3.TabIndex = 9;
-            label3.Text = "Текст для поиска";
+            label3.Text = "Search text";
             // 
             // txtForSearch
             // 
-            txtForSearch.Location = new Point(123, 118);
+            txtForSearch.Location = new Point(86, 117);
             txtForSearch.Name = "txtForSearch";
             txtForSearch.Size = new Size(199, 23);
             txtForSearch.TabIndex = 10;
@@ -180,13 +183,13 @@
             txtOCR.Name = "txtOCR";
             txtOCR.ReadOnly = true;
             txtOCR.ScrollBars = ScrollBars.Both;
-            txtOCR.Size = new Size(753, 147);
+            txtOCR.Size = new Size(1023, 147);
             txtOCR.TabIndex = 11;
             // 
             // cboLang
             // 
             cboLang.FormattingEnabled = true;
-            cboLang.Location = new Point(383, 118);
+            cboLang.Location = new Point(367, 117);
             cboLang.Name = "cboLang";
             cboLang.Size = new Size(121, 23);
             cboLang.TabIndex = 12;
@@ -194,36 +197,36 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(343, 121);
+            label4.Location = new Point(302, 121);
             label4.Name = "label4";
-            label4.Size = new Size(34, 15);
+            label4.Size = new Size(59, 15);
             label4.TabIndex = 13;
-            label4.Text = "Язык";
+            label4.Text = "Language";
             // 
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(16, 220);
+            label5.Location = new Point(14, 220);
             label5.Name = "label5";
-            label5.Size = new Size(67, 15);
+            label5.Size = new Size(45, 15);
             label5.TabIndex = 14;
-            label5.Text = "Все файлы";
+            label5.Text = "All files";
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(393, 220);
+            label6.Location = new Point(537, 220);
             label6.Name = "label6";
-            label6.Size = new Size(111, 15);
+            label6.Size = new Size(65, 15);
             label6.TabIndex = 15;
-            label6.Text = "Найденные файлы";
+            label6.Text = "Found files";
             // 
             // statusStrip1
             // 
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripProgressBar1 });
             statusStrip1.Location = new Point(0, 677);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(780, 22);
+            statusStrip1.Size = new Size(1051, 22);
             statusStrip1.TabIndex = 17;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -232,11 +235,43 @@
             toolStripProgressBar1.Name = "toolStripProgressBar1";
             toolStripProgressBar1.Size = new Size(300, 16);
             // 
-            // Form1
+            // cboCreateTextFiles
+            // 
+            cboCreateTextFiles.FormattingEnabled = true;
+            cboCreateTextFiles.Location = new Point(848, 117);
+            cboCreateTextFiles.Name = "cboCreateTextFiles";
+            cboCreateTextFiles.Size = new Size(191, 23);
+            cboCreateTextFiles.TabIndex = 18;
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new Point(694, 121);
+            label7.Name = "label7";
+            label7.Size = new Size(148, 15);
+            label7.TabIndex = 19;
+            label7.Text = "A files with recognized text";
+            // 
+            // chkCaseinsensitive
+            // 
+            chkCaseinsensitive.AutoSize = true;
+            chkCaseinsensitive.Checked = true;
+            chkCaseinsensitive.CheckState = CheckState.Checked;
+            chkCaseinsensitive.Location = new Point(16, 146);
+            chkCaseinsensitive.Name = "chkCaseinsensitive";
+            chkCaseinsensitive.Size = new Size(109, 19);
+            chkCaseinsensitive.TabIndex = 20;
+            chkCaseinsensitive.Text = "Case insensitive";
+            chkCaseinsensitive.UseVisualStyleBackColor = true;
+            // 
+            // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(780, 699);
+            ClientSize = new Size(1051, 699);
+            Controls.Add(chkCaseinsensitive);
+            Controls.Add(label7);
+            Controls.Add(cboCreateTextFiles);
             Controls.Add(statusStrip1);
             Controls.Add(label6);
             Controls.Add(label5);
@@ -255,8 +290,8 @@
             Controls.Add(label2);
             Controls.Add(label1);
             MaximizeBox = false;
-            Name = "Form1";
-            Text = "Поиск текста в скриншотах";
+            Name = "MainForm";
+            Text = "ScanReader: Search for text in screenshots";
             mnuFinded.ResumeLayout(false);
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
@@ -288,5 +323,8 @@
         private ContextMenuStrip mnuFinded;
         private ToolStripMenuItem mnuCopy;
         private ToolStripMenuItem mnuMove;
+        private ComboBox cboCreateTextFiles;
+        private Label label7;
+        private CheckBox chkCaseinsensitive;
     }
 }

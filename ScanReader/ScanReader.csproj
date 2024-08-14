@@ -6,7 +6,25 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Version>1.0.0.0</Version>
+    <PackageProjectUrl>https://github.com/PhoenixOleg/ScanReader</PackageProjectUrl>
+    <Copyright>Oleg A. Korolev</Copyright>
+    <Company>Oleg A. Korolev</Company>
+    <Authors>Oleg A. Korolev</Authors>
+    <Description>This program is designed to search for text in images (screenshots).</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/PhoenixOleg/ScanReader</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>screenshot;image;OCR;text;search</PackageTags>
+    <Title>ScanReader</Title>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Tesseract" Version="5.2.0" />

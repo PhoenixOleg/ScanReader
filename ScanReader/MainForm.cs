@@ -1,31 +1,34 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Tesseract;
+using ScanReader.Static;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ScanReader
 {
     public partial class MainForm : Form
     {
-        private string imagePath;
-        private string tessDataPath;
+        private string imagePath = string.Empty;
+        private string tessDataPath = string.Empty;
+        private List<ImageFile> recognizedImages = [];
 
         public MainForm()
         {
             InitializeComponent();
 
-            cboLang.Items.Add("Eng");
-            cboLang.Items.Add("Rus");
-            cboLang.Items.Add("Eng+Rus");
+            ConfigControls.Lang(cboLang);
 
-            cboLang.DropDownStyle = ComboBoxStyle.DropDownList;
-            cboLang.SelectedIndex = 0;
+            ConfigControls.CreateTextFiles(cboCreateTextFiles);
 
-            txtDest.Text = "C:\\C#_ActualProjects\\ScanReader\\Dest";
-            txtTessData.Text = "C:\\C#_ActualProjects\\ScanReader\\TessData";
+            //txtDest.Text = "C:\\C#_ActualProjects\\Images\\Source";
+            //txtTessData.Text = "C:\\C#_ActualProjects\\ScanReader\\TessData";
         }
 
-        private void cmdStart_Click(object sender, EventArgs e)
+        private void CmdStart_Click(object sender, EventArgs e)
         {
+            string? lang = "eng"; //Default value
+            string searchText;
+
             lstAllFiles.Items.Clear();
             lstFindedFiles.Items.Clear();
 
@@ -33,76 +36,126 @@ namespace ScanReader
             tessDataPath = txtTessData.Text;
             txtOCR.Clear();
 
+            recognizedImages.Clear();
+
+            searchText = txtForSearch.Text;
+
             toolStripProgressBar1.Value = 0;
 
-            string lang = cboLang.SelectedItem.ToString();
-
-            if (!Directory.Exists(imagePath))
+            if (cboLang.SelectedItem?.ToString() is not null)
             {
-                MessageBox.Show("Каталог " + imagePath + " не существует", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lang = cboLang.SelectedItem.ToString();
+            }
+
+            if (!FileSystemActions.ValidateFolders(imagePath, tessDataPath))
+            {
                 return;
             }
 
-            if (!Directory.Exists(tessDataPath))
+            List<ImageFile> imageFilesList = FileSystemActions.GetFiles(imagePath);
+
+            foreach (ImageFile imageFile in imageFilesList)
             {
-                MessageBox.Show("Каталог " + tessDataPath + " не существует", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                lstAllFiles.Items.Add(imageFile.FileName);
             }
 
-            var files = Directory.GetFiles(imagePath);
-            if (files.Length > 0)
-            {
-                lstAllFiles.Items.AddRange(files);
-            }
-            else
-            {
-                MessageBox.Show("Отсутствуют файлы в каталоге " + imagePath, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return;
-            }
+            System.Windows.Forms.Application.DoEvents();
+            TextSearcher(lang, searchText, imageFilesList);
 
-            Application.DoEvents();
-            // Создание нового движка Tesseract OCR
+            MessageBox.Show("Completed!", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void TextSearcher(string? lang, string searchText, List<ImageFile> imageFilesList)
+        {
+            bool textIsFind;
+
+            //Creating a new engine Tesseract OCR
             try
             {
                 using (var engine = new TesseractEngine(tessDataPath, lang, EngineMode.TesseractAndLstm))
                 {
                     int idx = 0;
-                    foreach (var file in files)
+                    foreach (ImageFile imageFile in imageFilesList)
                     {
-                        // Загрузка изображения
-                        using (var img = Pix.LoadFromFile(file))
+                        txtOCR.AppendText(imageFile.FullName + " is processing..." + Environment.NewLine);
+                        textIsFind = false;
+                        if (FileSystemActions.FileIsImage(imageFile.FullName))
                         {
-                            // Обработка изображения и распознавание текста
-                            using (var page = engine.Process(img))
+                            //Uploading an image
+                            using (var img = Pix.LoadFromFile(imageFile.FullName))
                             {
-                                string text = page.GetText();
-                                if (text.Contains(txtForSearch.Text))
+                                //Image processing and text recognition
+                                using (var page = engine.Process(img))
                                 {
-                                    lstFindedFiles.Items.Add(file);
+                                    string textFromImage = page.GetText();
+                                    string sourceText;
 
-                                    txtOCR.AppendText(file + (Environment.NewLine));
-                                    txtOCR.AppendText("Распознанный текст:" + (Environment.NewLine) + text + (Environment.NewLine) + (Environment.NewLine));
+                                    if (chkCaseinsensitive.Checked)
+                                    {
+                                        sourceText = page.GetText().ToUpper();
+                                        searchText = searchText.ToUpper();
+                                    }
+                                    else
+                                    {
+                                        sourceText = textFromImage;
+                                    }
+
+                                    if (sourceText.Contains(searchText))
+                                    {
+                                        textIsFind = true;
+                                        lstFindedFiles.Items.Add(imageFile.FullName);
+                                        recognizedImages.Add(imageFile);
+
+                                        txtOCR.AppendText("Recognized text:" + Environment.NewLine + textFromImage + Environment.NewLine + Environment.NewLine);
+                                    }
+                                    else
+                                    {
+                                        txtOCR.AppendText("The text you were looking for was not found." + Environment.NewLine + Environment.NewLine);
+                                    }
+
+                                    switch (cboCreateTextFiles.SelectedIndex)
+                                    {
+                                        case 0: //Do not create
+                                            break;
+
+                                        case 1: //Only for found images
+                                            if (textIsFind)
+                                            {
+                                                FileSystemActions.WriteTextFile(imageFile.FilePath, imageFile.FileName, textFromImage);
+                                            }
+                                            break;
+
+                                        case 2: //For all images
+                                            FileSystemActions.WriteTextFile(imageFile.FilePath, imageFile.FileName, textFromImage);
+                                            break;
+                                    }
                                 }
                             }
-                            idx++;
-                            toolStripProgressBar1.Value = (int)Math.Round((double)idx / files.Length * 100, MidpointRounding.AwayFromZero);
                         }
-                        Application.DoEvents();
+                        else
+                        {
+                            txtOCR.AppendText("File is not an image or does not exist." + Environment.NewLine + Environment.NewLine);
+                        }
+
+                        idx++;
+                        toolStripProgressBar1.Value = (int)Math.Round((double)idx / imageFilesList.Count * 100, MidpointRounding.AwayFromZero);
+
+                        System.Windows.Forms.Application.DoEvents();
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Произошла ошибка с кодом " + ex.HResult + Environment.NewLine + ex.Message, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("An error occurred with the code " + ex.HResult + Environment.NewLine + ex.Message, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            MessageBox.Show("Completed!", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void cmdDest_Click(object sender, EventArgs e)
+        private void CmdDest_Click(object sender, EventArgs e)
         {
-            folderBrowserDialog1 = new FolderBrowserDialog();
-            folderBrowserDialog1.ShowNewFolderButton = true;
+            folderBrowserDialog1 = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = true
+            };
 
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
@@ -110,11 +163,13 @@ namespace ScanReader
             }
         }
 
-        private void cmdTessData_Click(object sender, EventArgs e)
+        private void CmdTessData_Click(object sender, EventArgs e)
         {
-            folderBrowserDialog1 = new FolderBrowserDialog();
-            folderBrowserDialog1.ShowNewFolderButton = true;
-            folderBrowserDialog1.OkRequiresInteraction = true;
+            folderBrowserDialog1 = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = true,
+                OkRequiresInteraction = true
+            };
 
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
@@ -122,12 +177,20 @@ namespace ScanReader
             }
         }
 
-        private void mnuCopy_Click(object sender, EventArgs e)
+        private void MnuCopy_Click(object sender, EventArgs e)
         {
             string destFolder;
 
-            folderBrowserDialog1 = new FolderBrowserDialog();
-            folderBrowserDialog1.ShowNewFolderButton = true;
+            if (recognizedImages.Count == 0)
+            {
+                MessageBox.Show("No recognized images", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            folderBrowserDialog1 = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = true
+            };
 
             if (!(folderBrowserDialog1.ShowDialog() == DialogResult.Cancel))
             {
@@ -138,12 +201,30 @@ namespace ScanReader
                     if (Directory.Exists(destFolder))
                     {
 
-                        foreach (var file in lstFindedFiles.Items)
+                        foreach (ImageFile file in recognizedImages)
                         {
-                            if (File.Exists(file.ToString()))
+                            if (File.Exists(file.FullName))
                             {
-                                string fileName = new FileInfo(file.ToString()).Name;
-                                File.Copy(file.ToString(), Path.Combine(destFolder, fileName));
+                                string newFilePlace = Path.Combine(destFolder, file.FileName);
+                                if (!File.Exists(newFilePlace))
+                                {
+                                    File.Copy(file.FullName, Path.Combine(destFolder, file.FileName), false);
+                                    if (File.Exists(file.FullName + ".txt"))
+                                    {
+                                        File.Copy(file.FullName + ".txt", Path.Combine(destFolder, file.FileName + ".txt"), true);
+                                    }
+                                }
+                                else
+                                {
+                                    if (MessageBox.Show("The file " + file.FullName + " is exists. Replace it?", "ScanReader", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                    {
+                                        File.Copy(file.FullName, Path.Combine(destFolder, file.FileName), true);
+                                        if (File.Exists(file.FullName + ".txt"))
+                                        {
+                                            File.Copy(file.FullName + ".txt", Path.Combine(destFolder, file.FileName + ".txt"), true);
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -152,23 +233,30 @@ namespace ScanReader
                     }
                     else
                     {
-                        MessageBox.Show("Каталог " + destFolder + " не существует", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("The " + destFolder + " folder does not exist", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Произошла ошибка с кодом " + ex.HResult + Environment.NewLine + ex.Message, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("An error occurred with the code " + ex.HResult + Environment.NewLine + ex.Message, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-
         }
 
-        private void mnuMove_Click(object sender, EventArgs e)
+        private void MnuMove_Click(object sender, EventArgs e)
         {
             string destFolder;
 
-            folderBrowserDialog1 = new FolderBrowserDialog();
-            folderBrowserDialog1.ShowNewFolderButton = true;
+            if (recognizedImages.Count == 0)
+            {
+                MessageBox.Show("No recognized images", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            folderBrowserDialog1 = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = true
+            };
 
             if (!(folderBrowserDialog1.ShowDialog() == DialogResult.Cancel))
             {
@@ -178,24 +266,42 @@ namespace ScanReader
                 {
                     if (Directory.Exists(destFolder))
                     {
-                        foreach (var file in lstFindedFiles.Items)
+                        foreach (ImageFile file in recognizedImages)
                         {
-                            if (File.Exists(file.ToString()))
+                            if (File.Exists(file.FullName))
                             {
-                                string fileName = new FileInfo(file.ToString()).Name;
-                                File.Move(file.ToString(), Path.Combine(destFolder, fileName), true);
+                                string newFilePlace = Path.Combine(destFolder, file.FileName);
+                                if (!File.Exists(newFilePlace))
+                                {
+                                    File.Move(file.FullName, Path.Combine(destFolder, file.FileName), false);
+                                    if (File.Exists(file.FullName + ".txt"))
+                                    {
+                                        File.Move(file.FullName + ".txt", Path.Combine(destFolder, file.FileName + ".txt"), true);
+                                    }
+                                }
+                                else 
+                                {
+                                    if (MessageBox.Show("The file " + file.FullName + " is exists. Replace it?", "ScanReader", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                    {
+                                        File.Move(file.FullName, Path.Combine(destFolder, file.FileName), true);
+                                        if (File.Exists(file.FullName + ".txt"))
+                                        {
+                                            File.Move(file.FullName + ".txt", Path.Combine(destFolder, file.FileName + ".txt"), true);
+                                        }
+                                    }
+                                }
                             }
                         }
                         MessageBox.Show("The move is complete!", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
                     {
-                        MessageBox.Show("Каталог " + destFolder + " не существует", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("The " + destFolder + " folder does not exist", "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Произошла ошибка с кодом " + ex.HResult + Environment.NewLine + ex.Message, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("An error occurred with the code " + ex.HResult + Environment.NewLine + ex.Message, "ScanReader", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
